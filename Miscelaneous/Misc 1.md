@@ -33,7 +33,7 @@ find . -name "*45*"
 ```
 
 I then realized that one of the wordlists containing the number “45” actually came from `rockyou.txt`, a well-known password list originating from a major security breach, as hinted in the challenge description.
-![[Pasted image 20260118023529.png|500]]
+![Pasted image 20260118023529.png](../_img/Pasted%20image%2020260118023529.png)
 
 #### 2. Solution Strategy
 Looking at the pairs of integers in the `Puzzle` file, and considering that the second numbers are small (0–7) while the first numbers match the scale of a wordlist, a **Book Cipher** approach seems logical. In this context, each pair of numbers represents coordinates:
@@ -77,7 +77,7 @@ print("fsuCTF{" + flag + "}")
 
 #### 3. Execution and Flag
 Running the script against the provided files shows the decoded message.
-![[Pasted image 20260118030528.png]]
+![Pasted image 20260118030528.png](../_img/Pasted%20image%2020260118030528.png)
 
 Flag: `fsuCTF{YouLookedUnderSomeRocksAndFoundAWordlistThisWillBeVeryImportantLaterIReallyHopeYouDidntDoThisManually}`
 
@@ -193,7 +193,7 @@ solve()
 #### 3. Execution and Flag
 When executing the script, all 250 operations are successfully completed, and the flag is obtained.
 
-![[Pasted image 20260118075949.png]]
+![Pasted image 20260118075949.png](../_img/Pasted%20image%2020260118075949.png)
 
 Flag: `fsuCTF{n3w_new_n3w_m4th_tm_p4rt_2}`
 
@@ -248,7 +248,7 @@ solve()
 #### 3. Execution and Flag
 The script is executed to recursively decode the multiple Base64 layers within `note3.txt` until the `fsuCTF{...}` flag is found in layer 26.
 
-![[Pasted image 20260119004245.png|650]]
+![Pasted image 20260119004245.png](../_img/Pasted%20image%2020260119004245.png)
 
 Flag: `fsuCTF{T0_0ff3nd_4_Co0k_47_S34_Is_4_F001s_Mist4k3}`
 
@@ -260,11 +260,11 @@ The challenge provides a 64-bit Linux executable named `EndangeredProgram`. The 
 
 #### 1. Analysis
 
-![[Pasted image 20260119005341.png]]
+![Pasted image 20260119005341.png](../_img/Pasted%20image%2020260119005341.png)
 
 After inspecting the binary with the `file` command, we confirm it is an **ELF 64-bit LSB pie executable**. Since we were instructed not to reverse engineer it, we perform a basic string analysis with `cat`.
 
-![[Pasted image 20260119010042.png]]
+![Pasted image 20260119010042.png](../_img/Pasted%20image%2020260119010042.png)
 
 The output reveals several interesting strings:
 - `VIRTUAL_ENV`: A common environment variable used by Python to indicate an active virtual environment.
@@ -294,7 +294,7 @@ export VIRTUAL_ENV=true
 
 After the execution in the proper enviroment we get the flag.
 
-![[Pasted image 20260119011158.png]]
+![Pasted image 20260119011158.png](../_img/Pasted%20image%2020260119011158.png)
 
 Flag: `fsuCTF{7hi5_I5_7h3_P3rf3c7_3nvir0nm3n7}`
 

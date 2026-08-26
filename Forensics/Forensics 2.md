@@ -17,7 +17,7 @@ This challenge provides us with a file named `xp_smol.7z`.
 #### 1. Analysis
 We started by decompressing the file using `7z x xp_smol.7z`, which gave us `xp_smol.vhd`. Running the `file` command confirmed this was a **Virtual Hard Disk**.
 
-![[Pasted image 20260220010016.png]]
+![Pasted image 20260220010016.png](../_img/Pasted%20image%2020260220010016.png)
 
 This meant it was likely to be a file system, so I mounted the disk on a Linux machine to explore the directories. 
 
@@ -32,7 +32,7 @@ sudo guestmount -a xp_smol.vhd -m /dev/sda1 --ro /mnt/xp_disk
 
 After mounting the drive and listing its content, I immediatly realized I was looking at a **Windows XP** installation. 
 
-![[Pasted image 20260220011404.png|480]]
+![Pasted image 20260220011404.png](../_img/Pasted%20image%2020260220011404.png)
 
 In XP, user data isn't in `C:\Users`, but in `C:\Documents and Settings`. I identified a user named **daniel**.
 
@@ -42,30 +42,30 @@ I decided to stop analyzing the source code and instead look through the rest of
 
 The first interesting thing I could find was a file called `README.rtf`, located in Daniel's `"My Documents"` folder.  Inside, I found a note from Daniel explaining the challenge’s lore:
 
-![[Pasted image 20260220014910.png]]
+![Pasted image 20260220014910.png](../_img/Pasted%20image%2020260220014910.png)
 
 Since Daniel didn’t remember where he saved his masterpiece, I decided to check his activity.
 
 On Windows XP, the `Recent` folder stores `.lnk` (shortcut) files for every document or application the user has opened. I navigated to `/mnt/xp_disk/Documents and Settings/daniel/Recent` and found a shortcut named `masterpiece.bmp.lnk`.
 
-![[Pasted image 20260220015300.png|420]]
+![Pasted image 20260220015300.png](../_img/Pasted%20image%2020260220015300.png)
 
 #### 2. Solution Strategy
 A `.lnk` file is more than a shortcut; it contains the absolute path to the target file. Even if the file is moved or "lost," the shortcut reveals where it was intended to be. I used `strings` on the shortcut and saw it pointed to 
 `C:\Documents and Settings\daniel\Desktop\masterpiece.bmp`, but the file wasn't there.
 
-![[Pasted image 20260220015558.png|450]]
+![Pasted image 20260220015558.png](../_img/Pasted%20image%2020260220015558.png)
 
 #### 3. Execution and Flag
 Since the "masterpiece" wasn’t on the desktop, I assumed it was elsewhere, so I used the `find` command to scan the entire disk:
 
-![[Pasted image 20260220015942.png|650]]
+![Pasted image 20260220015942.png](../_img/Pasted%20image%2020260220015942.png)
 
 Apparently if a program like Paint crashes or is closed unexpectedly, it can save recovery data or temporary files in the `Application Data` folder.
 
 I first tried using `strings` on the BMP file, but found nothing. After some research, I learned that BMP is a Windows image format that stores pictures as a grid of pixels, so I simply opened it with an image viewer and that revealed the flag.
 
-![[Pasted image 20260219001306.png|250]]
+![Pasted image 20260219001306.png](../_img/Pasted%20image%2020260219001306.png)
 
 Flag: `fsuCTF{p1ca55o_w0u1dv3_l0v3d_m5pa1n7}`
 
@@ -81,13 +81,13 @@ I began with a preliminary visual inspection, scrolling through the packets to s
 - I first checked the **DNS** queries to see if there were any "weird" domains, but it just looked like standard queries.
 - I then looked at the **HTTP** traffic. I noticed that among the regular traffic, there was a repetitive pattern of requests that didn't look like normal browsing.
 
-![[Pasted image 20260220200415.png]]
+![Pasted image 20260220200415.png](../_img/Pasted%20image%2020260220200415.png)
 
 Every few packets, a specific internal host was reaching out to the same external destination. I saw that all these suspicious requests were directed to the IP address **178.63.67.153**. I applied a filter for that specific address: `http && ip.addr == 178.63.67.153`.
 
 Once filtered, I could see that the traffic consisted of dozens of GET requests to a very long, unique UUID-like path: `/1a7b92af-e58d-41c2-9493-edcdb4066a8c`. Every request ended with a different value for a parameter named `q`.
 
-![[Pasted image 20260220202257.png]]
+![Pasted image 20260220202257.png](../_img/Pasted%20image%2020260220202257.png)
 
 
 #### 2. Solution Strategy
@@ -112,7 +112,7 @@ Since the number of packets wasn’t excessive, I manually extracted the values 
 
 I then pasted the reconstructed string into CyberChef, decoded it, and obtained the flag.
 
-![[Pasted image 20260220204528.png|350]]
+![Pasted image 20260220204528.png](../_img/Pasted%20image%2020260220204528.png)
 
 Flag: `fsuCTF{Y0ur3_G0nn4_N33d_A_Bi6g3r_8o47}`
 
@@ -133,7 +133,7 @@ I began by seeing what was happening on the machine at the time of the dump so I
 
 `vol -f whats_the_title_again.raw windows.pslist`
 
-![[Pasted image 20260220215540.png]]
+![Pasted image 20260220215540.png](../_img/Pasted%20image%2020260220215540.png)
 
 I spotted two processes that seemed likely to correspond to programs being used by the user.
 - `wmplayer.exe` (PID 2004): The Windows Media Player.
@@ -151,7 +151,7 @@ I then ran `strings` on it to extract readable strings from the dump and search 
 strings -e l pid.2276.dmp | grep -i "flag"
 ```
 
-![[Pasted image 20260220222317.png|600]]
+![Pasted image 20260220222317.png](../_img/Pasted%20image%2020260220222317.png)
 
 The output showed several lines that confirmed I was looking in the right places, but it told me that the actual flag was hidden elsewhere and I shouldn't expect it to look like a flag.
 
@@ -163,7 +163,7 @@ vol -f whats_the_title_again.raw windows.cmdline
 
 The output for `notepad.exe` showed nothing interesting but the output for `vmplayer.exe` showed it had been launched with the file `Sleep Away.mp3`.
 
-![[Pasted image 20260220224539.png]]
+![Pasted image 20260220224539.png](../_img/Pasted%20image%2020260220224539.png)
 
 At first I thought this could be the song that the user was listening to but the flag `fsuCTF{Sleep Away.mp3}` wasn't accepted as a solution. After some research I learned that **"Sleep Away"** by Bob Acri is a famous default sample song included with Windows 7.
 
@@ -176,7 +176,7 @@ I tried to use the `windows.windows.Windows` plugin to list window titles, but I
 
 I decided to search the entire memory dump for the string "Windows Media Player", as window titles for this app usually follow the pattern: `[Song Title] - [Artist] - Windows Media Player`.
 
-![[Pasted image 20260220223753.png|550]]
+![Pasted image 20260220223753.png](../_img/Pasted%20image%2020260220223753.png)
 
 This time, the song name appeared in leetspeak, which confirmed that we had successfully identified the flag.
 

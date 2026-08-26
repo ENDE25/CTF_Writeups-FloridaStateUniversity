@@ -261,7 +261,7 @@ fsuCTF{i_l0v3_m3m0ry_m4p5}
 ```
 
 I confirmed it by sending the flag to the binary:
-![[Pasted image 20260422173446.png|517]]
+![Pasted image 20260422173446.png](../_img/Pasted%20image%2020260422173446.png)
 
 
 ## too_late_sneaky
@@ -273,11 +273,11 @@ unzip too_late_sneaky.zip
 
 This extracted two files: `snoopy` and `too_late_sneaky.pcap`. I ran the `file` command on both of them to figure out what they were:
 
-![[Pasted image 20260422173801.png]]
+![Pasted image 20260422173801.png](../_img/Pasted%20image%2020260422173801.png)
 
 So I had a network capture file and a text file. I opened the `snoopy` file first to see what was in it:
 
-![[Pasted image 20260422173932.png]]
+![Pasted image 20260422173932.png](../_img/Pasted%20image%2020260422173932.png)
 
 I had never seen this format before, so I searched for what `CLIENT_HANDSHAKE_TRAFFIC_SECRET` and `CLIENT_TRAFFIC_SECRET_0` were. I found out that this is the format of a **TLS key log file**, also known as an SSLKEYLOGFILE. Browsers can export these files when you set the `SSLKEYLOGFILE` environment variable. They contain the session keys used to encrypt TLS traffic, which means they can be used to decrypt captured HTTPS traffic.
 
@@ -291,7 +291,7 @@ I filtered the traffic to see only the decrypted HTTP requests. Since most of th
 
 Then I noticed one particular request in the list. It was a GET request to `www.youtube.com` with including an interesting query parameter:
 
-![[Pasted image 20260422174326.png]]
+![Pasted image 20260422174326.png](../_img/Pasted%20image%2020260422174326.png)
 
 I URL-decoded the search query (`%7B` = `{`, `%7D` = `}`) and got the flag:
 
@@ -370,7 +370,7 @@ xdg-open recovered/screenshot.png
 
 The image showed a Minecraft sign with the flag written on it.
 
-![[screenshot.png|286]]
+![screenshot.png](../_img/screenshot.png)
 
 ```
 fsuCTF{y0u_h4ve_m1n3cr4f7_1t_c0m3s_w1th_y0ur_0s}
@@ -563,7 +563,7 @@ The script does three simple things:
 3. It sends a GET to `/` with the forged cookie and prints the response.
 
 I ran the script and got the flag:
-![[Pasted image 20260422193615.png]]
+![Pasted image 20260422193615.png](../_img/Pasted%20image%2020260422193615.png)
 
 ```
 fsuCTF{l3ngth_3xt3nsi0n_is_fun}

@@ -13,13 +13,13 @@ This document contains the write-ups for the three challenges of **Assignment 7*
 #### 1. Analysis
 To begin with I started by checking the file type and running it to see the behavior described in the prompt.
 
-![[Pasted image 20260305135943.png]]
+![Pasted image 20260305135943.png](../_img/Pasted%20image%2020260305135943.png)
 
 The file is **not stripped**, which is means the function names and symbols are preserved, making our analysis easier. 
 
 When I executed it, the program indeed terminated immediately with no output. To understand why it was quitting, I used `ltrace` to see library calls:
 
-![[Pasted image 20260305140200.png|600]]
+![Pasted image 20260305140200.png](../_img/Pasted%20image%2020260305140200.png)
 
 The program tries to open a file named `input.txt`. Since it didn't exist, `fopen` returned `nil`, and the program safely exited.
 
@@ -31,15 +31,15 @@ gef➤  disas main
 Here are the critical sections I identified:
 
 1. Between `<+139>` and `<+191>`, the program moves four 64-bit constants into the stack:
-	![[Pasted image 20260305145214.png]]
+	![Pasted image 20260305145214.png](../_img/Pasted%20image%2020260305145214.png)
 	  *This looks like the encrypted flag, totaling 32 bytes of data.*
 	  
 2. At `<+371>`, it calls `makeKey` after setting `esi` to `0x2a` (42 in decimal). 
-	![[Pasted image 20260305145634.png]]
+	![Pasted image 20260305145634.png](../_img/Pasted%20image%2020260305145634.png)
 	  *`0x2a` might be the seed used to generate a "random" key. Since it is constant, the generated will be identical every time we run the program.*
 	
 	I disassembled the `makeKey` function to verify this, and confirmed that the C function `srand` is called with the value `0x2a`, which is passed as an argument from `main`.
-	![[Pasted image 20260305151209.png]]
+	![Pasted image 20260305151209.png](../_img/Pasted%20image%2020260305151209.png)
 3. The `main` function executes a sequential chain of critical operations: 
 	
 	  **`loadData`** → **`makeKey`** → **`performEncryption`** → **`checkState`**
@@ -76,20 +76,20 @@ Based on the disassembly, my strategy was:
 	
 2. **Step 2: Forcing the Execution Path**
 	I ran the program in GDB and set a breakpoint right after `loadData` at `*main+323`.
-	![[Pasted image 20260305153445.png]]
+	![Pasted image 20260305153445.png](../_img/Pasted%20image%2020260305153445.png)
 	The program succesfully loaded our input in `$rsi`:
-	![[Pasted image 20260305153551.png]]
+	![Pasted image 20260305153551.png](../_img/Pasted%20image%2020260305153551.png)
 	The program stopped. I checked `RAX` and saw it was non-zero (indicating an error). 
-	![[Pasted image 20260305153625.png]]
+	![Pasted image 20260305153625.png](../_img/Pasted%20image%2020260305153625.png)
 	I forced it to zero so the program would continue:
-	![[Pasted image 20260305153720.png|400]]
+	![Pasted image 20260305153720.png](../_img/Pasted%20image%2020260305153720.png)
 3. **Step 3: Finding the Key and the Target**
 	The program stopped at `checkState`. I checked the arguments:
 	- `$rsi` points to the **Encrypted Flag**
 	- `$rdi` points to a structure. By inspecting `$rdi`, I found it contained a pointer to a second buffer at `0x55555555a5b0`.
 	
 	I extracted both buffers:
-	![[Pasted image 20260305154009.png|550]]
+	![Pasted image 20260305154009.png](../_img/Pasted%20image%2020260305154009.png)
 1. **Step 4: Solving the XOR**
 	At first, XORing the contents of both buffers did not seem to produce any meaningful result. However, I noticed that when XORing the last bytes of each buffer, the flag comparison was being performed in reverse order.
 	- `0x20` (Target) $\oplus$ `0x46` (Key) = `0x66` ('f')
@@ -132,7 +132,7 @@ This challenge just provides us with a file named `CoffeeGrinder.jar`.
 #### 1. Analysis
 Since a JAR is essentially a ZIP file containing Java bytecode, I decided to unzip it to see the "parts" of this coffee grinder.
 
-![[Pasted image 20260305171713.png]]
+![Pasted image 20260305171713.png](../_img/Pasted%20image%2020260305171713.png)
 
 - **`Main.class` & `CryptUtils.class`**: Are the compiled java classes
 - **`encrypted_secret.bin`**: Looks like the encripted flag
@@ -144,7 +144,7 @@ $ sudo jadx /.../CryptUtils.class -d /.../source_code
 
 After decompiling both classes, we obtain a directory structure for each class containing their Java source code.
 
-![[Pasted image 20260305172457.png]]
+![Pasted image 20260305172457.png](../_img/Pasted%20image%2020260305172457.png)
 
 Once decompiled, I looked at the source code.
 
@@ -247,13 +247,13 @@ In this challenge we are provided with a single binary file: `chicken_scratch`.
 #### 1. Analysis
 I started by checking what kind of file I was dealing with using the `file` command:
 
-![[Pasted image 20260306010918.png]]
+![Pasted image 20260306010918.png](../_img/Pasted%20image%2020260306010918.png)
 
 The output indicates that the file is a stripped ELF binary, meaning the author removed the symbol information, so function names are not visible
 
 I tried to execute the file to see its behavior, but I ran into a library error:
 
-![[Pasted image 20260306011242.png]]
+![Pasted image 20260306011242.png](../_img/Pasted%20image%2020260306011242.png)
 
 The prefix **`[PYI-...]`** and the mention of **`libpython3.10`** reveal that this isn't a native C/C++ program. It is a **Python program** packaged as a standalone executable using PyInstaller.
 
@@ -273,7 +273,7 @@ Looking into the extracted folder, I found several files, but one stood out: **`
 A `.pyc` file is **compiled Python bytecode**. It’s not human-readable source code. I tried to decompile it back to `.py` using the `pycdc` decompiler *(I had to clone it and compile it from [github](https://github.com/zrax/pycdc.git))* but I got an error:
 
 >[!error] Error when trying to decompile
-> ![[Pasted image 20260306012228.png|460]]
+> ![Pasted image 20260306012228.png](../_img/Pasted%20image%2020260306012228.png)
 > I also tried other decompilation tools such as `uncompyle6` and `decompyle3`, but they failed for the same reason: the `.pyc` file was compiled with **Python 3.10**, and the tools I tested do not fully support that bytecode version, so the script cannot be decompiled.
 
 If I couldn't get the source code, I had to read the "assembly" of Python. I used `pycdas` to generate a disassembly of the bytecode.
@@ -299,7 +299,7 @@ The file is divided into several sections:
 		    The program builds a map used as a translation table.
 		     1. First it initilizes the dictionary with`0 BUILD_MAP 0`
 		     2. For each entry it does the mapping like shown above:
-			     ![[Pasted image 20260306020650.png|480]]
+			     ![Pasted image 20260306020650.png](../_img/Pasted%20image%2020260306020650.png)
 		     3. Saves the dictionary as AAAA with `104 STORE_NAME 0 (AAAA)`
 		 2. **Challenge List Creation (`BBBB`)**
 			The program prepares the sequence of "symbol strings" the user must decode .

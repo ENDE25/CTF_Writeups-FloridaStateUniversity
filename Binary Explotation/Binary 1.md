@@ -15,7 +15,7 @@ For this challenge we are given two files: a compiled binary (`color_factory`) a
 ## 1. Analysis
 The first thing I did was figuring out what kind of file we are dealing with. Running `file` on the binary gave us:
 
-![[Pasted image 20260312172832.png]]
+![Pasted image 20260312172832.png](../_img/Pasted%20image%2020260312172832.png)
 
 It is a **64-bit** ELF executable and it is **not stripped**, meaning function names are still present in the binary.
 
@@ -102,9 +102,9 @@ The idea is that if our calculations are correct:
 
 After running the program we observe that it crashes. We check the registers and the stack and we confirm that everything landed where we expected:
 
-*Registers:*![[Pasted image 20260313154807.png]]
+*Registers:*![Pasted image 20260313154807.png](../_img/Pasted%20image%2020260313154807.png)
 *Stack:*
-![[Pasted image 20260313161007.png]]
+![Pasted image 20260313161007.png](../_img/Pasted%20image%2020260313161007.png)
 
 - `RBP = 0x4242424242424242` - the B's are in the saved RBP slot.
 - `RSP → 0x4343434343434343` - the C's are in the return address slot.
@@ -115,7 +115,7 @@ Now we know that if we replace those 8 C's with the address of `win()`, the CPU 
 
 To obtain the address of `win`, I used the `nm` command and found that it is located at `0x401186`.
 
-![[Pasted image 20260312173634.png]]
+![Pasted image 20260312173634.png](../_img/Pasted%20image%2020260312173634.png)
 
 ## 3. Execution and Flag
 With the offset confirmed, we craft the payload. The structure is simple: 40 bytes of padding to reach the return address, followed by the address of `win()`.
@@ -140,7 +140,7 @@ p.interactive()
 
 After running the script, the server jumps to `win()`, opens `flag.txt` and prints:
 
-![[Pasted image 20260313162801.png]]
+![Pasted image 20260313162801.png](../_img/Pasted%20image%2020260313162801.png)
 
 Flag: `fsuCTF{crayo1a_g07_n0thing_0n_me}`
 
@@ -152,13 +152,13 @@ This challenge presents us with a restaurant ordering system written in C.
 #### 1. Analysis
 The first thing I did was figure out what I was dealing with.
 
-![[Pasted image 20260313165430.png]]
+![Pasted image 20260313165430.png](../_img/Pasted%20image%2020260313165430.png)
 
 It is a linux executable, and it says it is not stripped, so debug symbols are at least partially there.
 
 I made it executable with `chmod +x` and run it to observe its normal behavior.
 
-![[Pasted image 20260313170401.png|487]]
+![Pasted image 20260313170401.png](../_img/Pasted%20image%2020260313170401.png)
 
 When executed, the program displays a simple menu where the user can choose between different options, such as viewing the menu or placing an order. Interacting with the program normally shows that it reads a file to display the menu and allows the user to input an order.
 
@@ -203,10 +203,10 @@ gef>  disas main
 
 The relevant lines:
 
-![[Pasted image 20260313170015.png]]
+![Pasted image 20260313170015.png](../_img/Pasted%20image%2020260313170015.png)
 	This is where menuLocation lives
 
-![[Pasted image 20260313170116.png]]
+![Pasted image 20260313170116.png](../_img/Pasted%20image%2020260313170116.png)
 	This is the scanf call for order
 
 So:
@@ -257,7 +257,7 @@ print(p.recvall().decode())
 
 The script ran but received 0 bytes and the connection closed immediately. The payload seemed correct, the offset was calculated from the disassembly, and the flow looked right. Adding `context.log_level = 'debug'` to the script made `pwntools` print every byte sent and received, which let us trace the exact exchange with the server step by step.
 
-![[Pasted image 20260313180850.png]]
+![Pasted image 20260313180850.png](../_img/Pasted%20image%2020260313180850.png)
 
 The server opened `flag.txt`, read it, and printed it just like it would have printed the menu.
 
@@ -319,19 +319,19 @@ Two things stand out:
 
 1. It appears to be a buffer overflow in `parseInput()`:
 	
-	![[Pasted image 20260313181721.png|395]]
+	![Pasted image 20260313181721.png](../_img/Pasted%20image%2020260313181721.png)
 	
 	`scanf("%s")` reads input until it finds whitespace, with no size limit. The buffer is only `0512` bytes, but the leading `0` makes this an **octal literal**, not decimal. `0512` in octal is `5*64 + 1*8 + 2 = 330` bytes, not 512. 
 
 2. `lucky_numbers()` leaks the address of `printf`:
 	
-	![[Pasted image 20260313183905.png|569]]
+	![Pasted image 20260313183905.png](../_img/Pasted%20image%2020260313183905.png)
 	
 	This prints the runtime address of `printf`.
 
 Then we check the binary protections using the `checksec` command:
 
-![[Pasted image 20260313192606.png]]
+![Pasted image 20260313192606.png](../_img/Pasted%20image%2020260313192606.png)
 
 - **i386 32-bit** - addresses are 32-bits
 - **No stack canary** - there is no protection checking if the stack was overwritten before returning
@@ -342,9 +342,9 @@ Then we check the binary protections using the `checksec` command:
 
 Since the server uses this exact libc, we can extract the offsets of everything we need:
 
-![[Pasted image 20260313193110.png]]
+![Pasted image 20260313193110.png](../_img/Pasted%20image%2020260313193110.png)
 
-![[Pasted image 20260313193203.png]]
+![Pasted image 20260313193203.png](../_img/Pasted%20image%2020260313193203.png)
 
 So our offsets inside libc are:
 
@@ -378,15 +378,15 @@ When `parseInput()` executes `ret`, EIP jumps to `system()`. The 32-bit calling 
 
 To finding the exact offset to EIP, we open gdb and use a cyclic pattern to find exactly how many bytes we need before overwriting EIP (the paddding):
 
-![[Pasted image 20260313194049.png]]
+![Pasted image 20260313194049.png](../_img/Pasted%20image%2020260313194049.png)
 
 We paste the pattern as input and the program crashes with: `$eip : 0x616d6461`
 
-![[Pasted image 20260313194150.png]]
+![Pasted image 20260313194150.png](../_img/Pasted%20image%2020260313194150.png)
 
 and then we check its offset
 
-![[Pasted image 20260313194317.png]]
+![Pasted image 20260313194317.png](../_img/Pasted%20image%2020260313194317.png)
 
 The offset is **346 bytes**.
 
@@ -431,11 +431,11 @@ p.sendlineafter(b"> ", payload)
 ```
 
 After runing it, `system("/bin/sh")` executes and we get an interactive shell.
-![[Pasted image 20260313195309.png]]
+![Pasted image 20260313195309.png](../_img/Pasted%20image%2020260313195309.png)
 
 Using this shell we can easily retrieve the flag:
 
-![[Pasted image 20260313195447.png]]
+![Pasted image 20260313195447.png](../_img/Pasted%20image%2020260313195447.png)
 
 Flag: `fsuCTF{f0r7un3_f4v0r5_7h3_f0r7un473}`
 
@@ -457,10 +457,10 @@ We have both the binary and the source code.
 
 I ran `file` and `checksec` to understand what we are dealing with:
 
-![[Pasted image 20260313200430.png]]
+![Pasted image 20260313200430.png](../_img/Pasted%20image%2020260313200430.png)
 	Once again, it is an unstripped Linux executable.
 
-![[Pasted image 20260313200600.png]]
+![Pasted image 20260313200600.png](../_img/Pasted%20image%2020260313200600.png)
 
 - **32-bit** binary.
 - **No stack canary** - we can overflow the stack without triggering any protection.
@@ -469,7 +469,7 @@ I ran `file` and `checksec` to understand what we are dealing with:
 
 I gave the binary execution permissions with `chmod +x` and ran it to see how it behaves. It presents a simple menu with four options: view a letter, write a letter, send a letter, and leave.
 
-![[Pasted image 20260313202612.png|257]]
+![Pasted image 20260313202612.png](../_img/Pasted%20image%2020260313202612.png)
 
 Then I read the source code carefully:
 
@@ -507,13 +507,13 @@ int main(...) {
 Two things stand out:
 
 1. Stack address leak in `view_letter`:
-	![[Pasted image 20260313200801.png]]
+	![Pasted image 20260313200801.png](../_img/Pasted%20image%2020260313200801.png)
 	
 	`letter` here is a pointer to the address of the `letter[]` buffer in `main`'s stack frame. So every time we call option 1, the program tells us exactly where `letter[]` is in memory.
 
 2.  Buffer overflow in `send_letter`:
 	
-	![[Pasted image 20260313201026.png|443]]
+	![Pasted image 20260313201026.png](../_img/Pasted%20image%2020260313201026.png)
 	
 	`scanf("%s")` reads input until whitespace with no length limit. The buffer is only 32 bytes, so if we send more than that, we start overwriting whatever comes after it on the stack, including the saved return address.
 
@@ -531,15 +531,15 @@ The only thing left to figure out how many bytes we need to write before reachin
 
 I opened the binary in GDB and used a cyclic pattern to measure the offset:
 
-![[Pasted image 20260313201402.png|724]]
+![Pasted image 20260313201402.png](../_img/Pasted%20image%2020260313201402.png)
 
 Then I ran the program (`run`) and followed the menu: option 2 to write a letter, then option 3 to send it. When prompted for the destination, I pasted the pattern. The program crashed with `$eip : 0x6161616c`:
 
-![[Pasted image 20260313201701.png]]
+![Pasted image 20260313201701.png](../_img/Pasted%20image%2020260313201701.png)
 
 I checked the offset and got an offset of **44 bytes**.
 
-![[Pasted image 20260313201806.png]]
+![Pasted image 20260313201806.png](../_img/Pasted%20image%2020260313201806.png)
 
 After 44 bytes of padding, the next 4 bytes overwrite EIP.
 
@@ -576,7 +576,7 @@ The script follows the three steps in order. First it sends the shellcode genera
 
 After running it, we get access to an interactive shell, where we can easily retrieve the flag:
 
-![[Pasted image 20260313202406.png|548]]
+![Pasted image 20260313202406.png](../_img/Pasted%20image%2020260313202406.png)
 
 Flag: `fsuCTF{fr33_5hippin6_0r_5h311_84ck}`
 

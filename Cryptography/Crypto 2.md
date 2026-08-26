@@ -121,7 +121,7 @@ s.close()
 
 Running it:
 
-![[Pasted image 20260413113147.png|659]]
+![Pasted image 20260413113147.png](../_img/Pasted%20image%2020260413113147.png)
 
 The script found the seed (`1776093203548029`), predicted all dice rolls in advance, and won every single remaining round 99-0.
 
@@ -229,28 +229,28 @@ In this challenge, we are given a file called `protected.zip`.
 ### 1. Analysis
 The first thing I did was check what kind of file it was:
 
-![[Pasted image 20260413115509.png]]
+![Pasted image 20260413115509.png](../_img/Pasted%20image%2020260413115509.png)
 
 So it is a zip file. When I tried to unzip it, it asked for a password, so it is password-protected. The hint "Jack the Ripper" made it clear that we would need **John the Ripper**, a well-known password cracking tool.
 
 ### 2. Decipher
 To crack the password, I first needed to extract the hash from the zip file. For that I used `zip2john`, which is a tool that comes with John the Ripper and converts the zip into a format that John can work with. This also revealed a file named `flag.txt` inside the zip file.
 
-![[Pasted image 20260413103023.png|642]]
+![Pasted image 20260413103023.png](../_img/Pasted%20image%2020260413103023.png)
 
 Then I checked the content of `hash.txt`:
 
-![[Pasted image 20260413115738.png]]
+![Pasted image 20260413115738.png](../_img/Pasted%20image%2020260413115738.png)
 
 With the hash ready, I ran John the Ripper using the `rockyou.txt` wordlist.
 
-![[Pasted image 20260413101724.png|624]]
+![Pasted image 20260413101724.png](../_img/Pasted%20image%2020260413101724.png)
 
 John found the password: `Lejoshg`. I then unzipped the file using that password:
 
-![[Pasted image 20260413103306.png|314]]
+![Pasted image 20260413103306.png](../_img/Pasted%20image%2020260413103306.png)
 
-![[Pasted image 20260413103405.png|278]]
+![Pasted image 20260413103405.png](../_img/Pasted%20image%2020260413103405.png)
 
 Flag: `fsuCTF{John_Work_Well_With_Rockyou}`
 

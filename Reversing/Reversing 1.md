@@ -14,30 +14,30 @@ In this challenge, we are given a single Linux binary called `nuclear_pasta`.
 #### 1. Analysis
 The first thing I did was check what kind of file I was dealing with using the `file` command.
 
-![[Pasted image 20260224231310.png]]
+![Pasted image 20260224231310.png](../_img/Pasted%20image%2020260224231310.png)
 
 The fact that it is **not stripped** will make reading the code easier sinces the developer left the function and variable names inside the binary.
 
 I gave the file execution permissions (`chmod +x nuclear_pasta`) and ran it to see how it behaves:
 
-![[Pasted image 20260224231502.png|400]]
+![Pasted image 20260224231502.png](../_img/Pasted%20image%2020260224231502.png)
 
 Apparently, the program just checks the flag. I enter a string, and it tells I’m wrong.
 
 I ran `strings` to see if the flag was just hidden in the text. I didn't find the flag, just the success/failure messages.
 
-![[Pasted image 20260224232650.png|320]]
+![Pasted image 20260224232650.png](../_img/Pasted%20image%2020260224232650.png)
 
 I uploaded the file to **Dogbolt.org**. I checked different outputs, but **Hex-Rays** gave the most readable code. I found two important functions: `main` and `convert`.
 
 - Inside `main`, I saw this:
-	![[Pasted image 20260224233223.png]]
+	![Pasted image 20260224233223.png](../_img/Pasted%20image%2020260224233223.png)
 	1.  It asks for my input.
 	2.  It uses a loop to change every letter I type using the `convert` function.
 	3.  It compares my modified input with a variable called `ct` using `strcmp`.
 
 - I then looked at the `convert` function: 
-	![[Pasted image 20260224233716.png]]
+	![Pasted image 20260224233716.png](../_img/Pasted%20image%2020260224233716.png)
 	I realized the `do-while` loop is a distraction. The condition `!(v4 % v3)` is only true once. The only important part is `a1 ^= 0xBB`. This means the "spaghetti code" is just a simple **XOR cipher** with the number **0xBB**.
 
 #### 2. Solution Strategy
@@ -45,13 +45,13 @@ I tried to use `strings` to find the secret `ct`, but it was not there. This is 
 
 To get those bytes, I used **GDB**. I knew the variable was named `ct` because the program was not stripped.
 
-![[Pasted image 20260224234256.png]]
+![Pasted image 20260224234256.png](../_img/Pasted%20image%2020260224234256.png)
 
 > The command `x/48xb` allows us to retrive 48 bytes in hex
 
 Now I have the "encrypted" bytes from the memory and I know the secret key is `0xBB`. The theory of XOR is: if `P ^ Key = C`, then `C ^ Key = P`. So, I just need to take every byte from `ct` and do XOR with `0xBB`.
 
-![[Pasted image 20260224235434.png|250]]
+![Pasted image 20260224235434.png](../_img/Pasted%20image%2020260224235434.png)
 
 #### 3. Execution and Flag
 Before doing everything, I wanted to be sure that my XOR theory was correct. I took the first four bytes from the `ct` variable in GDB and calculated them manually:
@@ -90,7 +90,7 @@ Flag: `fsuCTF{sp4ghett1_c0d3_15_a_d3fens3_mech4n1sm}`
 ### ==PROBLEM 2== - Old School Gauntlet
 In this challenge we are provided with an ELF binary executable named `gauntlet`. When executed normally, it displays a welcome message and immediately begins a series of "checks" before finishing.
 
-![[Pasted image 20260223215150.png]]
+![Pasted image 20260223215150.png](../_img/Pasted%20image%2020260223215150.png)
 
 The program claims to decrypt a flag at a specific memory address, but it finishes execution without actually printing it.
 
@@ -102,21 +102,21 @@ I observed three distinct blocks of code that functioned as protections or check
 1. **Parent Process Check:** 
 	I observed calls to `getppid@plt` followed by `readlink@plt`. 
 	
-	*Calls `getppid` and stores the result in `ebx`*![[Pasted image 20260223220745.png]]
-	*Builds the string `/proc/[PID]/exe`*![[Pasted image 20260223220931.png]]
-	*The program then reads the symbolic link `/proc/[PID]/exe`.*![[Pasted image 20260223221517.png]]
+	*Calls `getppid` and stores the result in `ebx`*![Pasted image 20260223220745.png](../_img/Pasted%20image%2020260223220745.png)
+	*Builds the string `/proc/[PID]/exe`*![Pasted image 20260223220931.png](../_img/Pasted%20image%2020260223220931.png)
+	*The program then reads the symbolic link `/proc/[PID]/exe`.*![Pasted image 20260223221517.png](../_img/Pasted%20image%2020260223221517.png)
 	Later, I saw a call to `strstr@plt`, which suggests the program then scans the parent process name for specific forbidden strings.
-	![[Pasted image 20260223221652.png]]
+	![Pasted image 20260223221652.png](../_img/Pasted%20image%2020260223221652.png)
 
 2. **Debugger Check (Ptrace):** 
 	I found a call to `ptrace@plt`. Immediately after, the code compares the result (`rax`) with `-1` (`0xffffffffffffffff`).
-	![[Pasted image 20260223221926.png]]
+	![Pasted image 20260223221926.png](../_img/Pasted%20image%2020260223221926.png)
     If `ptrace` returns -1, it means the process is already being traced by a debugger. A conditional jump (`jne`) directs the flow to an exit routine if this check fails.
 
 3. **Execution Time Check:** 
 	I observed two calls to `time@plt` at different points in the execution. Between them, the code performs a subtraction (`sub`) and compares the result against `0x1` (1 second).
     If the execution takes longer than 1 second, the program jumps to a failure block.
-	![[Pasted image 20260223222213.png]]	![[Pasted image 20260223222528.png]]
+	![Pasted image 20260223222213.png](../_img/Pasted%20image%2020260223222213.png)	![Pasted image 20260223222528.png](../_img/Pasted%20image%2020260223222528.png)
 
 If any of these checks fail, the program skips the decryption logic or terminates.
 
@@ -128,7 +128,7 @@ If any of these checks fail, the program skips the decryption logic or terminate
 >
 >*The final flag is decrypted using this variable. If the checks are bypassed using manual patching (like changing jumps to `NOP`), the variable never reaches the required value of 64, which results in an incorrectly decrypted flag*.
 >
->![[Pasted image 20260223224246.png]]
+>![Pasted image 20260223224246.png](../_img/Pasted%20image%2020260223224246.png)
 
 
 #### 2. Solution Strategy
@@ -177,7 +177,7 @@ gef➤ continue
 
 `[ main+1182 ]` - GDB indicated the jump was `NOT TAKEN` (failure). 
 
-![[Pasted image 20260223225545.png]]
+![Pasted image 20260223225545.png](../_img/Pasted%20image%2020260223225545.png)
 
 I used the `jump` command to skip to the success address (`*main+1237`).
 
@@ -188,7 +188,7 @@ gef➤ jump *main+1237
 **Step 4: Bypassing the Time Check**
 `[ main+1303 ]` - Since I was manually stepping through the code, the execution time was much longer than the allowed 1 second, so the jump was `NOT TAKEN`. I forced the jump to the success address (`*main+1358`).
 
-![[Pasted image 20260223231431.png]]
+![Pasted image 20260223231431.png](../_img/Pasted%20image%2020260223231431.png)
 
 ```bash
 gef➤ jump *main+1358
@@ -197,7 +197,7 @@ gef➤ jump *main+1358
 **Step 5: Decryption**
 `[ main+1647 ]` - Having successfully bypassed all three gates (Guardian, Ptrace, and Time), I inspected the stack memory at `$rbp-0x250` where the flag was constructed.
 
-![[Pasted image 20260223232050.png]]
+![Pasted image 20260223232050.png](../_img/Pasted%20image%2020260223232050.png)
 
 Flag: `fsuCTF{b3tt3r_7h4n_cry5t41_4rm0r}`
 
@@ -210,28 +210,28 @@ In this challenge, we are presented with a Linux binary named `upper_management`
 #### 1. Analysis
 I started running `file` to understand what kind of file I was dealing with.
 
-![[Pasted image 20260225000408.png]]
+![Pasted image 20260225000408.png](../_img/Pasted%20image%2020260225000408.png)
 
 The word **"stripped"** means the developers removed all the function and variable names, so I won't see a clear `main()` function or helpful labels in the debugger.
 
 Next, I checked for hardcoded strings using `String` but it didn't give any relevant information. I then tried running the binary and giving it a dummy input, and nothing interesting happened.
 
-![[Pasted image 20260225000721.png|600]]
+![Pasted image 20260225000721.png](../_img/Pasted%20image%2020260225000721.png)
 
 I tried using `ltrace` to see if the program used `strcmp` to compare my input against the real flag in memory.
 
-![[Pasted image 20260225001029.png|600]]
+![Pasted image 20260225001029.png](../_img/Pasted%20image%2020260225001029.png)
 
 I noticed that it calls `strlen` on my input but **never reaches a comparison function**. This suggested that the program first checks if the input length is correct. If it isn't, it just exits.
 
 Since I couldn't see the symbols, I used **Dogbolt.org** to look at the decompiled code from Ghidra. I searched for the "Management" strings to find the main logic. I found a function that contained the following:
 
-![[Pasted image 20260225002010.png]]
+![Pasted image 20260225002010.png](../_img/Pasted%20image%2020260225002010.png)
 
 1. The input must be exactly **38 characters** long ($0x26$ in hex).    
 2. The program iterates through each character and passes it to a function `FUN_004011d6` along with its index.
 3. Looking into `FUN_004011d6`, it was a massive chain of XORs, additions, and shifts that seemed impossible to reverse by hand.
-	![[Pasted image 20260225001815.png]]
+	![Pasted image 20260225001815.png](../_img/Pasted%20image%2020260225001815.png)
 4. Finally, the transformed string is compared against a hardcoded byte array (`local_c8`).
 
 #### 2. Solution Strategy
@@ -241,7 +241,7 @@ What I am going to do is let angr analyze the program and automatically calculat
 
 > Angr does not execute the program with real numbers at first. It treats the input as symbolic variables and tracks the conditions the program applies to them. Then it computes concrete values that satisfy all those conditions and make the program follow the desired execution path.
 
-![[Pasted image 20260225002731.png|500]]
+![Pasted image 20260225002731.png](../_img/Pasted%20image%2020260225002731.png)
 
 #### 3. Execution and Flag
 I wrote a short Python script using the `angr` library. I defined the input as a symbolic variable of 38 bytes and told the solver to find a path that prints the success message while avoiding the failure message.
@@ -269,10 +269,10 @@ if simgr.found:
 ```
 
 Running the script took about 15 seconds. The solver successfully navigated through all the XORs and additions to find the original characters.
-![[Pasted image 20260225004800.png]]
+![Pasted image 20260225004800.png](../_img/Pasted%20image%2020260225004800.png)
 
 I verified it by running the binary manually:
 
-![[Pasted image 20260225004849.png]]
+![Pasted image 20260225004849.png](../_img/Pasted%20image%2020260225004849.png)
 
 Flag: `fsuCTF{5ti11_b3tter_7h4n_73ch_supp0r7}`

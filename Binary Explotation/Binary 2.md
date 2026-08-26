@@ -15,7 +15,7 @@ In this challenge we are given a `.tar.gz` archive and a netcat connection.
 ## 1. Analysis
 We start by unpacking the archive to see what we are working with `tar -xvzf leak.tar.gz`:
 
-![[Pasted image 20260315192226.png]]
+![Pasted image 20260315192226.png](../_img/Pasted%20image%2020260315192226.png)
 
 We get the binary, the source code, and the exact versions of libc and the dynamic linker that the server uses.
 
@@ -48,7 +48,7 @@ We notice several things:
 
 Then we check the binary protections using `checksec`.
 
-![[Pasted image 20260315193243.png|384]]
+![Pasted image 20260315193243.png](../_img/Pasted%20image%2020260315193243.png)
 
 This tells us:
 
@@ -58,19 +58,19 @@ This tells us:
 
 Then we give permissions to the executable with `chmod +x` and run the program.
 
-![[Pasted image 20260315193905.png|455]]
+![Pasted image 20260315193905.png](../_img/Pasted%20image%2020260315193905.png)
 
 The value printed ends in `00`. Apparently, stack canaries in Linux always end in a null byte, this is to stop string functions from copying them.
 
 We confirm this by looking at the disassembly of `vuln`:
 
-![[Pasted image 20260315194709.png|561]]
+![Pasted image 20260315194709.png](../_img/Pasted%20image%2020260315194709.png)
 
 The compiler stores the canary at `rbp-0x8`. The program prints `*(rbp-8)`. They are the same location. The program is leaking its own canary.
 
 With the canary covered, we still need to break ASLR to find where libc is loaded. For that we turn to the format string vulnerability. We send a string of `%p` specifiers and see what gets printed:
 
-![[Pasted image 20260315195804.png]]
+![Pasted image 20260315195804.png](../_img/Pasted%20image%2020260315195804.png)
 
 We spot several addresses starting with `0x7f`, which is the range where Linux loads shared libraries. We also see that position 27 matches the canary value exactly. Position 2 (`0x7f1b177f81c0`) and position 3 (`0x7f1b179867a0`) look like libc addresses.
 
@@ -82,11 +82,11 @@ gef➤ break vuln
 
 After stopping, we check the mappings:
 
-![[Pasted image 20260315200951.png]]
+![Pasted image 20260315200951.png](../_img/Pasted%20image%2020260315200951.png)
 
 The output shows libc loaded at base `0x00007ffff7da2000`. We also notice in the registers at the breakpoint:
 
-![[Pasted image 20260315202852.png]]
+![Pasted image 20260315202852.png](../_img/Pasted%20image%2020260315202852.png)
 
 `printf` is at `0x00007ffff7dfd1c0`. Subtracting the base:
 
@@ -113,17 +113,17 @@ _We also need a ROP gadget to load that argument into `rdi`, since the first arg
 
 We get the function offsets using `readelf`:
 
-![[Pasted image 20260315210801.png]]
+![Pasted image 20260315210801.png](../_img/Pasted%20image%2020260315210801.png)
 
 The string `/bin/sh` is stored somewhere inside libc itself - it is used internally. We find it using `strings`.
 
-![[Pasted image 20260315210836.png]] _The `-t x` flag prints the offset in hex._
+![Pasted image 20260315210836.png](../_img/Pasted%20image%2020260315210836.png) _The `-t x` flag prints the offset in hex._
 
 So `/bin/sh` lives at offset `0x1da4ab` inside the libc file.
 
 For the gadget, we need `pop rdi ; ret` to put the address of `/bin/sh` into `rdi` before calling `system`. We search for it inside the provided libc:
 
-![[Pasted image 20260315211058.png]]
+![Pasted image 20260315211058.png](../_img/Pasted%20image%2020260315211058.png)
 
 This gadget is at offset `0x11b8fa` inside libc, so at runtime it will be at `libc_base + 0x11b8fa`. We also note that the `ret` instruction of this gadget is at `0x11b8fb`. We will use it later as a standalone `ret` to align the stack.
 
@@ -140,7 +140,7 @@ At runtime: `libc_base = leaked_printf - 0x64100`
 
 The last thing we need before writing the exploit is the exact overflow offset. We disassemble `vuln` and look for where the buffer is referenced:
 
-![[Pasted image 20260315211827.png]]
+![Pasted image 20260315211827.png](../_img/Pasted%20image%2020260315211827.png)
 
 The stack layout for `scanf` is:
 
@@ -238,7 +238,7 @@ The script connects to the server and attempts the exploit in a loop. On each it
 
 Running it gives us an interactive shell, where we can easily retrieve the flag:
 
-![[Pasted image 20260315231818.png]]
+![Pasted image 20260315231818.png](../_img/Pasted%20image%2020260315231818.png)
 
 Flag: `fsuCTF{ThereIsALeakInTheFunction}`
 
@@ -258,9 +258,9 @@ We get two files: the binary `iron_throne` and its source code `iron_throne.c`.
 
 We run `file` and `checksec` to understand what we are dealing with:
 
-![[Pasted image 20260315233940.png]]
+![Pasted image 20260315233940.png](../_img/Pasted%20image%2020260315233940.png)
 
-![[Pasted image 20260315234010.png]]
+![Pasted image 20260315234010.png](../_img/Pasted%20image%2020260315234010.png)
 
 A few things stand out:
 
@@ -308,7 +308,7 @@ The GOT is a table in memory that holds the real runtime addresses of library fu
 
 We run the binary to confirm our understanding of the flow:
 
-![[Pasted image 20260315234338.png|509]]
+![Pasted image 20260315234338.png](../_img/Pasted%20image%2020260315234338.png)
 
 The leaked address is the runtime address of `system`.
 
@@ -318,17 +318,17 @@ Now we need two more things to build the exploit:
 
 We get the GOT address of `fputs` with `objdump`:
 
-![[Pasted image 20260315234506.png]]
+![Pasted image 20260315234506.png](../_img/Pasted%20image%2020260315234506.png)
 
 The GOT entry for `fputs` is at the fixed address `0x404010`. Since there is no PIE, this address is the same on every run.
 
 To find the format string offset we need to know at which stack position our `msg` buffer starts. We run the binary with `/bin/sh` as the name and a probe string as the message:
 
-![[Pasted image 20260315234852.png]]
+![Pasted image 20260315234852.png](../_img/Pasted%20image%2020260315234852.png)
 
 We do not see `0x4141414141414141` (our eight A's) in positions 1 through 16. We extend the probe range:
 
-![[Pasted image 20260315235051.png]]
+![Pasted image 20260315235051.png](../_img/Pasted%20image%2020260315235051.png)
 
 `0x4141414141414141` shows up at position **18**. That is our offset.
 
@@ -376,7 +376,7 @@ fputs(name, stdout);
 
 It looks up `fputs` in the GOT, finds `system` there, and calls `system("/bin/sh")`. We then get an interactive shell:
 
-![[Pasted image 20260315235241.png|544]]
+![Pasted image 20260315235241.png](../_img/Pasted%20image%2020260315235241.png)
 
 Flag: `fsuCTF{4_l4nni573r_41w4y5_0verwri735_hi5_go7}`
 
@@ -396,9 +396,9 @@ We get two files: the binary `gambler_1` and its source code `gambler_1.c`.
 
 We run `file` and `checksec` to understand what we are dealing with:
 
-![[Pasted image 20260316000643.png]]
+![Pasted image 20260316000643.png](../_img/Pasted%20image%2020260316000643.png)
 
-![[Pasted image 20260316000720.png]]
+![Pasted image 20260316000720.png](../_img/Pasted%20image%2020260316000720.png)
 
 A few things stand out from `checksec`:
 
@@ -471,11 +471,11 @@ Several things catch our attention:
 
 The program prints the runtime address of `main`. Since PIE is enabled and addresses change every run, this is crucial: with this value we can calculate where the binary is loaded in memory and derive the address of any function inside it.
 
-![[Pasted image 20260316000938.png]]
+![Pasted image 20260316000938.png](../_img/Pasted%20image%2020260316000938.png)
 
 The second thing we notice is the input handling in `main`:
 
-![[Pasted image 20260316001109.png|443]]
+![Pasted image 20260316001109.png](../_img/Pasted%20image%2020260316001109.png)
 
 `bet` is only 20 bytes, but `scanf("%s", ...)` reads input until it finds whitespace with no length limit. This is a classic stack buffer overflow. Combined with the lack of a canary, we can overwrite the return address of `main`.
 
@@ -483,7 +483,7 @@ The third thing is `buy_flag`. This function reads and prints the flag, but it i
 
 The fourth thing is this:
 
-![[Pasted image 20260316001228.png]]
+![Pasted image 20260316001228.png](../_img/Pasted%20image%2020260316001228.png)
 
 This is an inline assembly gadget placed there on purpose by the author. The instruction `pop %rdi` loads the top of the stack into the `rdi` register, which in 64-bit Linux is the register used to pass the first argument to a function. The `ret` after it then transfers execution to whatever address is on top of the stack next.
 
@@ -492,13 +492,13 @@ Finally, `payout` is a function that adds money to `balance`. It takes a wager a
 ## 2. Solution Strategy
 Our first idea is to skip the `if` check in `buy_flag` entirely by jumping past it. Looking at the disassembly:
 
-![[Pasted image 20260316001542.png|643]]
+![Pasted image 20260316001542.png](../_img/Pasted%20image%2020260316001542.png)
 
 If we jump directly to offset `0x1234`, we skip the check completely. We try this first.
 
 For the overflow, we look at the disassembly of `main` to figure out the exact offset from `bet` to the return address:
 
-![[Pasted image 20260316001831.png|702]]
+![Pasted image 20260316001831.png](../_img/Pasted%20image%2020260316001831.png)
 
 This gives us the following stack layout:
 
@@ -512,7 +512,7 @@ The distance from `bet` to the return address is `0x20 + 0x08 = 40 bytes`. We se
 
 We also remember that NX is enabled, which means `fopen` (called inside `buy_flag`) requires the stack to be aligned to 16 bytes when it is called. When we redirect execution through a ROP chain, that alignment can be off by 8 bytes. The standard fix is to add a single `ret` gadget before the target. We find one:
 
-![[Pasted image 20260316001938.png]]
+![Pasted image 20260316001938.png](../_img/Pasted%20image%2020260316001938.png)
 
 The first exploit attempt looks like this:
 
@@ -625,7 +625,7 @@ p.interactive()
 
 When we run the script against the server:
 
-![[Pasted image 20260316002201.png|601]]
+![Pasted image 20260316002201.png](../_img/Pasted%20image%2020260316002201.png)
 
 The chain executes in order: `pop_rdi` loads 3,000,000,000 into `rdi`, then `payout` uses that as the wager and raises `balance` far above 4,294,967,296, and finally `buy_flag` runs from its proper prologue, finds the balance check satisfied, and prints the flag.
 
@@ -647,9 +647,9 @@ We get two files: the compiled binary `gambler_2` and its C source code `gambler
 
 We run `file` and `checksec` to understand the binary before touching anything else:
 
-![[Pasted image 20260316005059.png]]
+![Pasted image 20260316005059.png](../_img/Pasted%20image%2020260316005059.png)
 
-![[Pasted image 20260316005136.png|421]]
+![Pasted image 20260316005136.png](../_img/Pasted%20image%2020260316005136.png)
 
 A few things to note here. 
 - **PIE** means the binary loads at a different base address every run, so we can not hardcode any address.
@@ -660,48 +660,48 @@ We read the source code carefully. A few things catch our attention.
 
 The first is the input flow in `main`:
 
-![[Pasted image 20260316005317.png]]
+![Pasted image 20260316005317.png](../_img/Pasted%20image%2020260316005317.png)
 
 And then, inside `high_and_low`:
 
-![[Pasted image 20260316005400.png]]
+![Pasted image 20260316005400.png](../_img/Pasted%20image%2020260316005400.png)
 
 The name we enter gets embedded into `prefix`, and then `prefix` is passed directly to `printf` as the format string. This is a **format string vulnerability**. When `printf` receives a format string it controls, it reads arguments from the stack according to the specifiers it finds. If we put something like `%p.%p.%p` as our name, `printf` will read values off the stack and print them. This is the "leak" the problem statement was hinting at.
 
 The second thing is the wager input in `main`:
 
-![[Pasted image 20260316005506.png|475]]
+![Pasted image 20260316005506.png](../_img/Pasted%20image%2020260316005506.png)
 
 `bet` is 20 bytes, but `scanf("%s", ...)` reads until whitespace with no length limit. This is a **stack buffer overflow**. Combined with the absence of a stack canary, we can overwrite the saved return address of `main`.
 
 The third thing is `buy_flag`. This function reads and prints the flag, but it is never called anywhere. It also has a condition:
 
-![[Pasted image 20260316005611.png|529]]
+![Pasted image 20260316005611.png](../_img/Pasted%20image%2020260316005611.png)
 
 We start with 300. Getting there through normal gameplay is not realistic. So the goal is to redirect execution to this function through the overflow.
 
 We also notice:
 
-![[Pasted image 20260316005640.png|266]]
+![Pasted image 20260316005640.png](../_img/Pasted%20image%2020260316005640.png)
 
 This is a gadget placed there intentionally.
 
 To confirm the format string vulnerability, we run the binary locally and enter `%p.%p.%p.%p.%p.%p.%p.%p.%p.%p.%p.%p.%p.%p.%p` as our name, then bet `1` and choose `H`:
 
-![[Pasted image 20260316005922.png]]
+![Pasted image 20260316005922.png](../_img/Pasted%20image%2020260316005922.png)
 
 We get a list of values printed inside the brackets. We spot values starting with `0x561d`, which is the range where the binary itself is loaded. Specifically, position 11 (`0x561d0f3e95c6`) ends in `5c6`.
 
 We check the offsets in the binary using `objdump`:
 
-![[Pasted image 20260316010106.png]]
+![Pasted image 20260316010106.png](../_img/Pasted%20image%2020260316010106.png)
 
 - `main` is at offset `0x146a`
 - `buy_flag` is at offset `0x122b`
 
 The address at position 11 of the leak ends in `5c6`. Looking at the disassembly, offset `0x15c6` is a return address inside the `main` loop (the instruction right after the call to `high_and_low`). 
 
-![[Pasted image 20260316010400.png|680]]
+![Pasted image 20260316010400.png](../_img/Pasted%20image%2020260316010400.png)
 
 The value at position 11 is a return address sitting on the stack inside `main`'s execution, and its lower bytes match offset `0x15c6`. We can use this to compute the PIE base:
 
@@ -711,19 +711,19 @@ pie_base = leak_pos11 - 0x15c6
 
 Now we look at the disassembly of `buy_flag` to understand the balance check:
 
-![[Pasted image 20260316010553.png|705]]
+![Pasted image 20260316010553.png](../_img/Pasted%20image%2020260316010553.png)
 
 If we jump directly to `0x1244` we skip the check completely. This becomes our initial target.
 
 To find the overflow offset we load the binary in GDB and use a cyclic pattern. 
 
-![[Pasted image 20260316010645.png|498]]
+![Pasted image 20260316010645.png](../_img/Pasted%20image%2020260316010645.png)
 
 We enter `test` as the name, send the pattern as the wager, then send `-1` to make `main` return (which is when the overwritten return address gets used):
 
 After running the program crashes and GDB reports `$rbp = 0x6161616161616561`. We check the offset:
 
-![[Pasted image 20260316010916.png]]
+![Pasted image 20260316010916.png](../_img/Pasted%20image%2020260316010916.png)
 
 GEF says 31 bytes to reach the saved RBP. That means the return address is at `31 + 8 = 39` bytes. However, looking at the actual crash output more carefully, RSP points to the middle of our pattern in a way that suggests an off-by-one in GEF's calculation. We verify by looking at what is on the stack when `main` tries to execute `ret` and confirm the correct offsets are:
 
@@ -813,7 +813,7 @@ p.interactive()
 
 Running it against the server gives us the flag.
 
-![[Pasted image 20260316011209.png|514]]
+![Pasted image 20260316011209.png](../_img/Pasted%20image%2020260316011209.png)
 
 Flag: `fsuCTF{y0u_g077a_1earn_t0_pl4y_i7_righ7}`
 

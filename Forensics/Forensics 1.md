@@ -15,7 +15,7 @@ The challenge provides a document named `Valtioneuvoston_asetus_101-2026.docm`. 
 #### 1. Analysis
 I started by checking the file type to confirm what I was dealing with.
 
-![[Pasted image 20260210022203.png]]
+![Pasted image 20260210022203.png](../_img/Pasted%20image%2020260210022203.png)
 
 A `.docm` file is essentially a ZIP container that includes a `vbaProject.bin` file containing macros. I tried running `strings` to see if the flag was just hidden in plaintext, but it returned nothing useful.
 
@@ -96,7 +96,7 @@ I used `openssl` to decrypt this hex string, using the Key and the Initializatio
 - **Key:** `8329bcdd9aff87c913257312abcdff90`
 - **IV:** `1337deadbeefcafe1337beefbeefcafe`
 
- ![[Pasted image 20260210052701.png]]
+ ![Pasted image 20260210052701.png](../_img/Pasted%20image%2020260210052701.png)
 - `xxd -r -p`: Converts the plain hex string into actual binary data.
 -  `openssl enc -aes-128-cbc`: Tells OpenSSL to use the AES algorithm in Cipher Block Chaining mode.
 -  `-d`: Decrypt.
@@ -112,17 +112,17 @@ This challenge presents us with a single PNG image of a cat in a box. The prompt
 #### 1. Analysis
 I started with file to check if the image was really a PNG.
 
-![[Pasted image 20260210195357.png]]
+![Pasted image 20260210195357.png](../_img/Pasted%20image%2020260210195357.png)
 
 The prompt mentioned "brute force," so my first instinct was to try `stegseek` using the `rockyou.txt` wordlist to check if there was an archive hidden inside using `steghide`.
 
-![[Pasted image 20260210195815.png]]
+![Pasted image 20260210195815.png](../_img/Pasted%20image%2020260210195815.png)
 
 >It failed because `steghide` only works with JPG/BMP.
 
 Looking closely at the image `Schrodinger.png`, I noticed a strange row of colored pixels in the top-left corner (both horizontally and vertically). This indicates that data has been injected into the pixel values themselves.
 
-![[Pasted image 20260210195626.png]]
+![Pasted image 20260210195626.png](../_img/Pasted%20image%2020260210195626.png)
 
 #### 2. Solution Strategy and Flag
 Since the "password brute force" path was a dead end, I shifted my strategy toward **bit-plane analysis**.
@@ -148,7 +148,7 @@ I took the strings from the Red and Blue channels and interleaved them (taking o
 
 Following this logic, the message reveals the flag.
 
-![[Pasted image 20260210201349.png]]
+![Pasted image 20260210201349.png](../_img/Pasted%20image%2020260210201349.png)
 
 Flag: `fsuCTF{d0_n07_ob53rv3}`
 
@@ -160,7 +160,7 @@ This challenge presents us with a mysterious file named `Orb`. According to the 
 #### 1. Analysis
 I started by performing basic reconnaissance using `file` to understand what I was dealing with.
 
-![[Pasted image 20260210215750.png]]
+![Pasted image 20260210215750.png](../_img/Pasted%20image%2020260210215750.png)
 
 > The system identified the file as a **PCAP capture file**.
 
@@ -181,17 +181,17 @@ The goal was to make Linux correctly identify the file as what it actually is: a
 #### 3. Execution and Flag
 I used `hexedit` to modify the file header. I located the first four bytes (`D4 C3 B2 A1`) and overwrote them with `7F 45 4C 46`.
 
-![[Pasted image 20260211015501.png]]
+![Pasted image 20260211015501.png](../_img/Pasted%20image%2020260211015501.png)
 
-![[Pasted image 20260211015545.png]]
+![Pasted image 20260211015545.png](../_img/Pasted%20image%2020260211015545.png)
 
 After saving the changes, I ran the `file` command again to see if the "fix" worked.
 
-![[Pasted image 20260211015641.png]]
+![Pasted image 20260211015641.png](../_img/Pasted%20image%2020260211015641.png)
 
 Finally, I added execution permissions with `chmod +x Orb` and ran the program, obtaining the flag.
 
-![[Pasted image 20260211015741.png]]
+![Pasted image 20260211015741.png](../_img/Pasted%20image%2020260211015741.png)
 
 Flag:  `fsuCTF{Magic_Orb}`
 
@@ -203,15 +203,15 @@ This challenge presents us with a file named *"broken"*. The premise is based on
 #### 1. Analysis
 I started by performing basic reconnaissance using `file` to understand what I was dealing with.
 
-![[Pasted image 20260211081747.png]]
+![Pasted image 20260211081747.png](../_img/Pasted%20image%2020260211081747.png)
 
 The system recognizes it as a **7-zip archive**, but the challenge description implies it is "broken." Simply trying to extract it throws an error: 
 
-![[Pasted image 20260211082805.png]]
+![Pasted image 20260211082805.png](../_img/Pasted%20image%2020260211082805.png)
 
 To understand _how_ it was broken, I needed to look at its internal structure. I used `xxd` to view the first few bytes (the header).
 
-![[Pasted image 20260211083000.png]]
+![Pasted image 20260211083000.png](../_img/Pasted%20image%2020260211083000.png)
 
 By analyzing the output we can observe that the first 6 bytes `37 7a bc af 27 1c` are the correct signature for a 7z file. However, at offset `0x08`, I saw `ffff ffff`. In 7-zip structures, this field is the **Start Header CRC**. Having all `F` means the checksum was likely wiped out or overwritten to prevent the archive from opening.
 
@@ -233,17 +233,17 @@ print(f"Correct CRC: {hex(crc)}")
 
 The output of the script shows that the CRC for our "broken" file should be `0x1324b0f7`
 
-![[Pasted image 20260211083546.png]]
+![Pasted image 20260211083546.png](../_img/Pasted%20image%2020260211083546.png)
 
 Using `hexedit`, I navigated to offset `0x08` and replaced `ff ff ff ff` with `f7 b0 24 13`.
 
-![[Pasted image 20260211083910.png]]
+![Pasted image 20260211083910.png](../_img/Pasted%20image%2020260211083910.png)
 
 > Note that I had to write it in **Little Endian** format (least significant byte first), which is how 7-zip stores these values.
 
 After the fix, I tried extracting, but the file asks for a password that we don't have.
 
-![[Pasted image 20260211084223.png]]
+![Pasted image 20260211084223.png](../_img/Pasted%20image%2020260211084223.png)
 
 I looked at the archive's metadata without extracting it using the "List" command (`7z l -slt broken`) with technical details:
 
@@ -265,6 +265,6 @@ I noticed a file named `therecouldnotbeabetterpassword`. I tried using that long
 
 The command successfully uncompressed the 7z file, and I could get the flag hidden in the `Flag.png` file inside it.
 
-![[Flag.png|200]]
+![Flag.png](../_img/Flag.png)
 
 Flag: `fsuCTF{3v3ry0n3_63t5_C4k3}`

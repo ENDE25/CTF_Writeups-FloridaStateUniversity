@@ -17,7 +17,7 @@ The page contains a small script that intercepts the form submission, encodes th
 #### 1. Analysis
 The initial analysis focuses on how the input is reflected. Since the response is massive and repetitive, I first check for **Cross-Site Scripting (XSS)**. However, I notice the header `x-xss-protection: 1; mode=block` is present.
 
-![[Pasted image 20260207035310.png]]
+![Pasted image 20260207035310.png](../_img/Pasted%20image%2020260207035310.png)
 
 I suspect **Server-Side Template Injection (SSTI)**. This happens when an application embeds user input into a template string before rendering it. If I can inject an expression that the server evaluates, I can achieve **Remote Code Execution (RCE)**.
 
@@ -39,7 +39,7 @@ test the execution-only tag:
 - **I send:** `<% 7*7 %>`
 - **Result:** The "Crazy" text appears, but the spaces where my input should be are completely **empty**.
 
-![[Pasted image 20260207041639.png]]
+![Pasted image 20260207041639.png](../_img/Pasted%20image%2020260207041639.png)
 
 This implies that the code is executing, but because I am not using the `=`, the result is not being sent to the page. 
 
@@ -66,7 +66,7 @@ I use the `Dir` class to see what files are on the server.
 ```
 
 *Output:*
-![[Pasted image 20260207042547.png]]
+![Pasted image 20260207042547.png](../_img/Pasted%20image%2020260207042547.png)
 
 I use `File.read` to extract the content of the flag.
 
@@ -76,7 +76,7 @@ I use `File.read` to extract the content of the flag.
 ```
 
 *Output:*
-![[Pasted image 20260207042854.png]]
+![Pasted image 20260207042854.png](../_img/Pasted%20image%2020260207042854.png)
 
 Flag:  `fsuCTF{I_W45_Cr4zy_0nc3_7h3y_10ck3d_M3_In_4_R00m_4_Ru883r_R00m_4_Ru883r_R00m_Fi113d_Wi7h_C7F_7h3_C7F_M4yd3_M3_Cr4zy}`
 
@@ -88,7 +88,7 @@ The challenge presents a simple web application for a **Surfboard Billing Invoic
 #### 1. Analysis
 I started by inspecting the source code of the page. I noticed something relevant in the client-side logic. The form doesn't send a standard POST request. Instead, a script captures the input and wraps it into an **XML structure**, which is then encoded in **Base64** and sent to the endpoint `/process_invoice`.
 
-![[Pasted image 20260207053215.png]]
+![Pasted image 20260207053215.png](../_img/Pasted%20image%2020260207053215.png)
 
 To see it I make a test request. After decoding, the payload sent is:
 ```xml
@@ -124,7 +124,7 @@ I crafted a payload to read `/etc/passwd`.
 ```
 
 I encoded this in Base64 and sent it via a POST request.
-![[Pasted image 20260207054654.png]]
+![Pasted image 20260207054654.png](../_img/Pasted%20image%2020260207054654.png)
 
 The result was empty. This might mean one of two things: either the `file://` wrapper is disabled, or the server is not showing the output of the entity.
 
@@ -147,7 +147,7 @@ I modified the payload to target the internal web server.
 ```
 
 Again, I encoded this in Base64 and sent it via a POST request.
-![[Pasted image 20260207055204.png]]
+![Pasted image 20260207055204.png](../_img/Pasted%20image%2020260207055204.png)
 
 The internal service on port 5001 simply served the flag as its index page.
 
@@ -161,7 +161,7 @@ The challenge presents a web-based "Leet-as-a-Service" tool. It allows users to 
 #### 1. Analysis
 The website consists of an input box for the `payload` and two checkboxes for "CTF Mode" (`-c`) and "Random Mode" (`-r`). Intercepting the traffic with ZAP Proxy, I saw that the form sends a POST request with two parameters: `payload` and `options`.
 
-![[Pasted image 20260207060624.png]]
+![Pasted image 20260207060624.png](../_img/Pasted%20image%2020260207060624.png)
 
 I start by testing common web vulnerabilities. Since the app interacts with a backend binary, my first thought was **Command Injection**.
 
@@ -188,7 +188,7 @@ If the `-e` option is passed, the program calls `executeCommand(command)`, which
 
 #### 2. Solution Strategy
 To begin with I tried to trigger the RCE with `options=-e ls`. The server succesfully executes the command and returns its output, encoded in leatspeak:
-![[Pasted image 20260207061913.png]]
+![Pasted image 20260207061913.png](../_img/Pasted%20image%2020260207061913.png)
 
 I notice the line `d3fini7ely_n07_7h3_fl4g.7x7`, refering to a file called `definitely_not_the_flag.txt` which looks that is definitely the flag.
 
@@ -214,7 +214,7 @@ payload=test&options=-e "more definitely_not_the_flag.txt"
 ```
 
 The word **"flag"** is present in a blacklist:  
-![[Pasted image 20260207063232.png]]
+![Pasted image 20260207063232.png](../_img/Pasted%20image%2020260207063232.png)
 
 To bypass this blacklist, we use a wildcard `*`, avoiding writing the word "flag" in the command. The payload finally sent in the POST request is:
 
@@ -224,7 +224,7 @@ payload=test&options=-e "cat definitely*"
 
 This time we successfully read the contents of the file, but once again, another problem appears. The server executed the command, read the file, and **translated the flag into leetspeak** before displaying it, returning the output `f5uC7F{wh9_h057_4ny7h1n6_0n_pr3m_wh3n_u_c0u1d_83_1337}`  
 
-![[Pasted image 20260207064926.png]]
+![Pasted image 20260207064926.png](../_img/Pasted%20image%2020260207064926.png)
 
 We could try to reverse the translation by inspecting the transformations implemented in the C code. The problem is that the function responsible for the conversion (`convert2leet`) performs a destructive transformation, meaning it creates collisions that are impossible to resolve.
 
@@ -255,7 +255,7 @@ payload=test&options=-e+"od+-b+definitely*"
 
 After sending the payload, the server responded with a sequence of pure octal numbers:
 
-![[Pasted image 20260206074239.png]]
+![Pasted image 20260206074239.png](../_img/Pasted%20image%2020260206074239.png)
 
 I convert the octal values to ASCII using an online tool to obtain the real text and got:
 
@@ -270,14 +270,14 @@ The challenge presents a web application that shows a cat GIF. The objective is 
 I started by inspecting the provided source code for the application. The server uses the **Express** framework and defines three main routes: `/`, `/feed`, and `/still-hungry`.
 
 The core logic resides in the `POST /feed` endpoint:
-![[Pasted image 20260207021636.png]]
+![Pasted image 20260207021636.png](../_img/Pasted%20image%2020260207021636.png)
 
 The condition to obtain the flag is `food.length > 0xB16_C4A6A5`. I first converted the hexadecimal value to a decimal integer to understand the scale of the requirement:
 $${0xB16\_C4A6A5=47,627,118,245}$$
 This means the `food` variable must have a length of over **47 billion characters**.
 
 I initially tried to send a standard POST request with a simple string to see the behavior:
-![[Pasted image 20260207015908.png]]
+![Pasted image 20260207015908.png](../_img/Pasted%20image%2020260207015908.png)
 
 The result is a `HTTP 302 Redirect to /still-hungry` from the server.
 
@@ -286,7 +286,7 @@ The result is a `HTTP 302 Redirect to /still-hungry` from the server.
 #### 2. Solution Strategy
 While reviewing the configuration, I noticed a specific line in the Express setup:
 
-![[Pasted image 20260207020759.png]]
+![Pasted image 20260207020759.png](../_img/Pasted%20image%2020260207020759.png)
 
 I researched the difference between `extended: false` and `extended: true`.
 - **`extended: false`**: Uses the classic `querystring` library
@@ -301,13 +301,13 @@ To inject an object with a specific property using the `urlencoded` format, I us
 
 >I chose a value slightly larger than the requirement: **47,627,118,246**.
 
-![[Pasted image 20260207021822.png]]
+![Pasted image 20260207021822.png](../_img/Pasted%20image%2020260207021822.png)
 
 The server processed the request. Because `extended` was set to `true`, `food` became the object `{ length: "47627118246" }`. When the `if` statement evaluated `food.length`, it retrieved my injected value. JavaScript then performed an implicit type conversion (casting the string to a number) to compare it with the hexadecimal constant.
 
 The condition evaluated to `true`, and the server returned he flag:
 
-![[Pasted image 20260207021919.png]]
+![Pasted image 20260207021919.png](../_img/Pasted%20image%2020260207021919.png)
 
 
 Flag:  `fsuCTF{1f_1_f17s_1_5i7s}`
